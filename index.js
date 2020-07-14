@@ -11,10 +11,35 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
-io.on('connection', (socket) => {
-    console.log('user connected');
-    socket.emit('message', { manny: 'hey how are you?'});
-    socket.on('another event', (data) => {
-        console.log(data);
+app.get('/room1', (req, res) => {
+    res.sendFile(__dirname + '/public/room1.html');
+});
+
+app.get('/room2', (req, res) => {
+    res.sendFile(__dirname + '/public/room2.html');
+});
+
+app.get('/room3', (req, res) => {
+    res.sendFile(__dirname + '/public/room3.html');
+});
+
+// tech namespace
+const tech = io.of('/tech');
+
+tech.on('connection', (socket) => {
+    socket.on('join', (data) => {
+        socket.join(data.room);
+        tech.in(data.room).emit('message', `New user joined ${data.room}`);
+    })
+
+    socket.on('message', (data) => {
+        console.log(`message: ${data.msg}`);
+        tech.in(data.room).emit('message', data.msg);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+
+        tech.emit('message', 'user disconnected');
     })
 })
